@@ -1,0 +1,91 @@
+<%# Partial: sourceReport.ejs %>
+<%# Expects: sources — array of { index, title, source, published, url, relevance, reason } %>
+<%# relevance values: 'High' | 'Medium' | 'Low' %>
+
+<div class="panel" id="source-report">
+  <div class="panel-title">Source Report</div>
+
+  <% if (!sources || sources.length === 0) { %>
+    <div class="empty-state">No sources retrieved yet.</div>
+  <% } else { %>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Article Title</th>
+            <th>Source</th>
+            <th>Published</th>
+            <th>Relevance</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% sources.forEach(function(s, i) {
+            const rel = (s.relevance || '').toLowerCase();
+            const tagClass = rel === 'high' ? 'tag-high' : rel === 'medium' ? 'tag-medium' : 'tag-low';
+          %>
+          <tr class="source-row source-<%= rel %>">
+            <td class="num"><%= i + 1 %></td>
+            <td>
+              <% if (s.url) { %>
+                <a href="<%= s.url %>" target="_blank" rel="noopener" class="article-link">
+                  <%= s.title %>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style="opacity:0.5;vertical-align:middle;margin-left:4px">
+                    <path d="M2 9L9 2M9 2H5M9 2v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </a>
+              <% } else { %>
+                <%= s.title %>
+              <% } %>
+            </td>
+            <td class="mono" style="font-size:12px;white-space:nowrap"><%= s.source %></td>
+            <td class="muted" style="font-size:12px;white-space:nowrap"><%= s.published %></td>
+            <td><span class="tag <%= tagClass %>"><%= s.relevance %></span></td>
+            <td class="reason"><%= s.reason %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="relevance-legend">
+      <span class="legend-item"><span class="tag tag-high">High</span> directly answers the claim</span>
+      <span class="legend-item"><span class="tag tag-medium">Medium</span> related context, indirectly useful</span>
+      <span class="legend-item"><span class="tag tag-low">Low</span> peripheral, minimal signal</span>
+    </div>
+  <% } %>
+</div>
+
+<style>
+  .table-wrap { overflow-x: auto; }
+
+  .article-link {
+    color: var(--text);
+    font-size: 13.5px;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .article-link:hover { color: var(--accent); }
+
+  /* Row color bands by relevance */
+  .source-high  td:first-child { border-left: 3px solid var(--high); }
+  .source-medium td:first-child { border-left: 3px solid var(--med); }
+  .source-low   td:first-child { border-left: 3px solid var(--low); }
+
+  .relevance-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>

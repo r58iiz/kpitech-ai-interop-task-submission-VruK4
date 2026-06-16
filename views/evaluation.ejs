@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { title: 'Evaluation Suite' }) %>
+  <style>
+    .page-header {
+      padding: 36px 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .page-header p { font-size: 14px; color: var(--muted); }
+
+    /* ── Run controls ─────────────────────────────────────────── */
+    .eval-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .eval-meta {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .eval-meta .mono { color: var(--text); }
+
+    /* ── Ground truth preview ─────────────────────────────────── */
+    .gt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .gt-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .gt-index {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 20px;
+      padding-top: 1px;
+    }
+    .gt-claim {
+      font-size: 13px;
+      line-height: 1.5;
+      flex: 1;
+      color: var(--text);
+    }
+    .gt-verdict {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      white-space: nowrap;
+      padding-top: 1px;
+    }
+    .verdict-true       { color: var(--high); }
+    .verdict-false      { color: var(--low); }
+    .verdict-partially  { color: var(--med); }
+    .verdict-cannot     { color: var(--muted); }
+
+    /* ── Progress bar shown while running ───────────────────── */
+    .run-progress {
+      display: none;
+      margin-bottom: 20px;
+    }
+    .run-progress.active { display: block; }
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Section label ───────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Per-claim detail accordion ──────────────────────────── */
+    .claim-details {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .claim-detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .claim-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .claim-detail-header:hover { background: rgba(255,255,255,0.02); }
+    .claim-detail-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 20px;
+    }
+    .claim-detail-text {
+      flex: 1;
+      font-size: 13.5px;
+    }
+    .claim-detail-chevron {
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .claim-detail-card.open .claim-detail-chevron { transform: rotate(180deg); }
+
+    .claim-detail-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .claim-detail-card.open .claim-detail-body { display: block; }
+
+    .detail-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 14px 0 8px;
+    }
+    .detail-sources { display: flex; flex-direction: column; gap: 6px; }
+    .detail-source-item {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .detail-answer {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('partials/navbar', { activePage: 'evaluation' }) %>
+
+  <main>
+    <div class="container" style="padding-bottom: 60px;">
+      <div class="page-header">
+        <h1>Evaluation Suite</h1>
+        <p>
+          Runs all 10 benchmark claims through the full pipeline, then passes each system answer
+          and expected verdict to a second LLM acting as judge.
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="eval-controls">
+        <% if (typeof results === 'undefined' || !results) { %>
+          <form action="/evaluation/run" method="POST" id="runForm">
+            <button type="submit" class="btn btn-primary" id="runBtn">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M3.5 2.5l9 5-9 5v-10z" fill="currentColor"/>
+              </svg>
+              Run Evaluation
+            </button>
+          </form>
+        <% } else { %>
+          <form action="/evaluation/run" method="POST">
+            <button type="submit" class="btn btn-ghost">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7a5 5 0 1 0 5-5 5 5 0 0 0-3.54 1.46" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                <path d="M2 3.5V7H5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Re-run
+            </button>
+          </form>
+        <% } %>
+
+        <% if (typeof groundTruthFile !== 'undefined') { %>
+        <div class="eval-meta">
+          Ground truth:
+          <span class="mono"><%= groundTruthFile %></span>
+          <span>·</span>
+          <span><%= typeof groundTruth !== 'undefined' ? groundTruth.length : 0 %> claims</span>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- Ground truth preview (always shown) -->
+      <% if (typeof groundTruth !== 'undefined' && groundTruth && groundTruth.length > 0) { %>
+      <div class="section-label">Ground Truth — 10 Claims</div>
+      <div class="gt-grid">
+        <% groundTruth.forEach(function(item, i) {
+          const v = (item.expectedVerdict || '').toLowerCase();
+          const vClass =
+            v.includes('true') && !v.includes('partial') && !v.includes('false') ? 'verdict-true' :
+            v.includes('false') ? 'verdict-false' :
+            v.includes('partial') ? 'verdict-partially' : 'verdict-cannot';
+        %>
+        <div class="gt-card">
+          <span class="gt-index"><%= i + 1 %></span>
+          <span class="gt-claim"><%= item.claim %></span>
+          <span class="gt-verdict <%= vClass %>"><%= item.expectedVerdict %></span>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+
+      <!-- Error state -->
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="error-msg"><%= error %></div>
+      <% } %>
+
+      <!-- Results -->
+      <% if (typeof results !== 'undefined' && results && results.length > 0) { %>
+
+        <%
+          // Parse r.evaluation ("Match. Because xyz." or "Partial Match\nBecause xyz.")
+          // into judgeResult + judgeReason for each result row
+          function parseEvaluation(evaluation) {
+            const str = (evaluation || '').trim();
+            const prefixes = ['Partial Match', 'No Match', 'Match'];
+            let judgeResult = 'No Match';
+            let judgeReason = str;
+            for (const prefix of prefixes) {
+              if (str.startsWith(prefix)) {
+                judgeResult = prefix;
+                judgeReason = str.slice(prefix.length).replace(/^[\s.\-:]+/, '').trim();
+                break;
+              }
+            }
+            return { judgeResult, judgeReason };
+          }
+
+          // sources come as { article, relevance } — flatten for display
+          function flattenSources(sources) {
+            return (sources || []).map(function(s) {
+              return {
+                title:     s.article.title,
+                source:    s.article.source,
+                relevance: s.relevance.relevance,
+                reason:    s.relevance.reason,
+              };
+            });
+          }
+        %>
+
+        <!-- Summary table -->
+        <%- include('partials/evaluationTable', {
+          rows: results.map(function(r, i) {
+            const parsed = parseEvaluation(r.evaluation);
+            return {
+              index:           i + 1,
+              claim:           r.claim,
+              expectedVerdict: r.expectedVerdict,
+              systemVerdict:   (r.answer || '—').slice(0, 80).trimEnd() + ((r.answer || '').length > 80 ? '…' : ''),
+              judgeResult:     parsed.judgeResult,
+              reason:          parsed.judgeReason,
+            };
+          }),
+          summary: summary
+        }) %>
+
+        <!-- Per-claim accordion -->
+        <div style="margin-top: 32px;">
+          <div class="section-label">Per-Claim Breakdown</div>
+          <div class="claim-details">
+            <% results.forEach(function(r, i) {
+              const parsed = parseEvaluation(r.evaluation);
+              const jr = parsed.judgeResult.toLowerCase().replace(/\s+/g, '');
+              const judgeClass =
+                jr === 'match'        ? 'tag-match' :
+                jr === 'partialmatch' ? 'tag-partial' : 'tag-nomatch';
+              const flatSources = flattenSources(r.sources);
+            %>
+            <div class="claim-detail-card" id="card-<%= i %>">
+              <div class="claim-detail-header" onclick="toggleCard(<%= i %>)">
+                <span class="claim-detail-num"><%= i + 1 %></span>
+                <span class="claim-detail-text"><%= r.claim %></span>
+                <span class="tag <%= judgeClass %>" style="margin-right:8px"><%= parsed.judgeResult %></span>
+                <svg class="claim-detail-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="claim-detail-body">
+
+                <% if (flatSources.length > 0) { %>
+                <div class="detail-section-title">Sources Retrieved</div>
+                <div class="detail-sources">
+                  <% flatSources.forEach(function(s, si) {
+                    const rel = (s.relevance || '').toLowerCase();
+                    const tc = rel === 'high' ? 'tag-high' : rel === 'medium' ? 'tag-medium' : 'tag-low';
+                  %>
+                  <div class="detail-source-item">
+                    <span class="mono" style="font-size:11px;padding-top:1px"><%= si + 1 %>.</span>
+                    <span style="flex:1"><%= s.title %> — <em><%= s.source %></em></span>
+                    <span class="tag <%= tc %>" style="flex-shrink:0"><%= s.relevance %></span>
+                  </div>
+                  <% }); %>
+                </div>
+                <% } %>
+
+                <% if (r.answer) { %>
+                <div class="detail-section-title">System Answer</div>
+                <p class="detail-answer"><%= r.answer %></p>
+                <% } %>
+
+                <div class="detail-section-title">Judge Reasoning</div>
+                <p style="font-size:13px;color:var(--muted)"><%= parsed.judgeReason %></p>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+
+      <% } else if (typeof results === 'undefined' || !results) { %>
+        <!-- Pre-run empty state -->
+        <div style="margin-top:16px">
+          <div class="empty-state" style="border: 1px solid var(--border); border-radius: var(--radius);">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="margin:0 auto 12px;display:block;opacity:0.3">
+              <rect x="4" y="8" width="32" height="24" rx="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10 16h20M10 20h14M10 24h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Click <strong>Run Evaluation</strong> to process all 10 benchmark claims and generate the judge summary.
+          </div>
+        </div>
+      <% } %>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleCard(i) {
+      const card = document.getElementById('card-' + i);
+      card.classList.toggle('open');
+    }
+
+    // Loading state on run
+    const runForm = document.getElementById('runForm');
+    if (runForm) {
+      runForm.addEventListener('submit', function () {
+        const btn = document.getElementById('runBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Running 10 claims…';
+      });
+    }
+
+    // Auto-style [Article N] citation tags in detail answers
+    document.querySelectorAll('.detail-answer').forEach(function(el) {
+      el.innerHTML = el.innerHTML.replace(
+        /\[([^\]]+)\]/g,
+        '<span style="display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-dim);border-radius:4px;padding:1px 6px;margin-left:2px">[$1]</span>'
+      );
+    });
+  </script>
+
+</body>
+</html>

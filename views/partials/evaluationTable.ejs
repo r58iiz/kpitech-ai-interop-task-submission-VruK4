@@ -1,0 +1,158 @@
+<%# Partial: evaluationTable.ejs %>
+<%# Expects:
+      rows — array of {
+        index, claim, expectedVerdict, systemVerdict, judgeResult, reason
+      }
+      judgeResult values: 'Match' | 'Partial Match' | 'No Match'
+      summary — { match, partial, noMatch, total, accuracy } (optional)
+%>
+
+<div class="panel" id="eval-table">
+  <div class="panel-title">Evaluation Summary</div>
+
+  <% if (!rows || rows.length === 0) { %>
+    <div class="empty-state">No evaluation results available.</div>
+  <% } else { %>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Claim</th>
+            <th>Expected Verdict</th>
+            <th>System Verdict</th>
+            <th>Judge</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function(row) {
+            const jr = (row.judgeResult || '').toLowerCase().replace(/\s+/g, '');
+            const judgeClass =
+              jr === 'match'        ? 'tag-match' :
+              jr === 'partialmatch' ? 'tag-partial' : 'tag-nomatch';
+          %>
+          <tr>
+            <td class="num"><%= row.index %></td>
+            <td style="max-width:240px"><%= row.claim %></td>
+            <td>
+              <span class="verdict-badge"><%= row.expectedVerdict %></span>
+            </td>
+            <td>
+              <span class="verdict-badge verdict-system"><%= row.systemVerdict %></span>
+            </td>
+            <td>
+              <span class="tag <%= judgeClass %>"><%= row.judgeResult %></span>
+            </td>
+            <td class="reason"><%= row.reason %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (summary) { %>
+    <div class="eval-summary-bar">
+      <div class="eval-stat">
+        <span class="eval-num" style="color:var(--match)"><%= summary.match %></span>
+        <span class="eval-label">Match</span>
+      </div>
+      <div class="eval-divider"></div>
+      <div class="eval-stat">
+        <span class="eval-num" style="color:var(--partial)"><%= summary.partial %></span>
+        <span class="eval-label">Partial</span>
+      </div>
+      <div class="eval-divider"></div>
+      <div class="eval-stat">
+        <span class="eval-num" style="color:var(--nomatch)"><%= summary.noMatch %></span>
+        <span class="eval-label">No Match</span>
+      </div>
+      <div class="eval-divider"></div>
+      <div class="eval-stat">
+        <span class="eval-num"><%= summary.accuracy %>%</span>
+        <span class="eval-label">Accuracy</span>
+      </div>
+    </div>
+
+    <!-- Accuracy bar -->
+    <div class="accuracy-bar-wrap">
+      <div class="accuracy-bar">
+        <div class="accuracy-fill-match"   style="width:<%= (summary.match   / summary.total * 100).toFixed(1) %>%"></div>
+        <div class="accuracy-fill-partial" style="width:<%= (summary.partial / summary.total * 100).toFixed(1) %>%"></div>
+        <div class="accuracy-fill-none"    style="width:<%= (summary.noMatch / summary.total * 100).toFixed(1) %>%"></div>
+      </div>
+      <span class="muted" style="font-size:12px">Overall accuracy: <%= summary.accuracy %>% across <%= summary.total %> claims</span>
+    </div>
+    <% } %>
+
+  <% } %>
+</div>
+
+<style>
+  .verdict-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .verdict-system { color: var(--accent); background: var(--accent-dim); white-space: normal; max-width: 200px; display: inline-block; line-height: 1.4; }
+
+  /* Summary bar */
+  .eval-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 24px;
+    padding: 18px 24px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .eval-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    gap: 2px;
+  }
+  .eval-num {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .eval-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .eval-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-hi);
+  }
+
+  /* Accuracy progress bar */
+  .accuracy-bar-wrap {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .accuracy-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--border);
+  }
+  .accuracy-fill-match   { background: var(--match);   transition: width 0.8s ease; }
+  .accuracy-fill-partial { background: var(--partial); transition: width 0.8s ease; }
+  .accuracy-fill-none    { background: var(--nomatch); transition: width 0.8s ease; }
+</style>

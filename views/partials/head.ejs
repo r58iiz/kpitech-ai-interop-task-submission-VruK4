@@ -1,0 +1,273 @@
+<%# Partial: head.ejs — shared <head> block for all pages %>
+<%# Expects: title (string), extraCss (optional string of additional <style> content) %>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><%= title %> — NewsVerify</title>
+
+<!-- Inter for body, JetBrains Mono for data/tags -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  /* ─── Design Tokens ─────────────────────────────────────────── */
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --border: #1e2330;
+    --border-hi: #2e3550;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #4f7ef7;
+    --accent-dim: #1e3a8a;
+
+    --high: #16a34a;
+    --high-bg: #052e16;
+    --med: #ca8a04;
+    --med-bg: #1c1800;
+    --low: #dc2626;
+    --low-bg: #1f0a0a;
+
+    --match: #16a34a;
+    --partial: #ca8a04;
+    --nomatch: #dc2626;
+
+    --radius: 8px;
+    --font: "Inter", system-ui, sans-serif;
+    --mono: "JetBrains Mono", monospace;
+  }
+
+  /* ─── Reset & Base ──────────────────────────────────────────── */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* ─── Layout ────────────────────────────────────────────────── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─── Utilities ─────────────────────────────────────────────── */
+  .mono {
+    font-family: var(--mono);
+  }
+  .muted {
+    color: var(--muted);
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .tag-high {
+    background: var(--high-bg);
+    color: var(--high);
+    border: 1px solid var(--high);
+  }
+  .tag-medium {
+    background: var(--med-bg);
+    color: var(--med);
+    border: 1px solid var(--med);
+  }
+  .tag-low {
+    background: var(--low-bg);
+    color: var(--low);
+    border: 1px solid var(--low);
+  }
+  .tag-match {
+    background: var(--high-bg);
+    color: var(--match);
+    border: 1px solid var(--match);
+  }
+  .tag-partial {
+    background: var(--med-bg);
+    color: var(--partial);
+    border: 1px solid var(--partial);
+  }
+  .tag-nomatch {
+    background: var(--low-bg);
+    color: var(--nomatch);
+    border: 1px solid var(--nomatch);
+  }
+
+  /* ─── Cards / Panels ────────────────────────────────────────── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── Table ─────────────────────────────────────────────────── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  .data-table thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-hi);
+  }
+  .data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .data-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .data-table tbody td {
+    padding: 12px 14px;
+    vertical-align: middle;
+    color: var(--text);
+  }
+  .data-table .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    width: 36px;
+  }
+  .data-table .reason {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ─── Spinner ───────────────────────────────────────────────── */
+  .spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-hi);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ─── Buttons ───────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition:
+      opacity 0.15s,
+      transform 0.1s;
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    opacity: 0.88;
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border-hi);
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    border-color: var(--muted);
+  }
+
+  /* ─── Error / Empty States ──────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .error-msg {
+    background: var(--low-bg);
+    border: 1px solid var(--low);
+    color: #fca5a5;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+</style>

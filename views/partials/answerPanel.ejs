@@ -1,0 +1,96 @@
+<%# Partial: answerPanel.ejs %>
+<%# Expects: answer (string with [Article N] citation tags), claim (string) %>
+
+<div class="panel" id="answer-panel">
+  <div class="panel-title">Grounded Answer</div>
+
+  <% if (!answer) { %>
+    <div class="empty-state">The grounded answer will appear here after retrieval.</div>
+  <% } else { %>
+    <p class="answer-claim-label">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="vertical-align:middle;margin-right:6px">
+        <path d="M6.5 1.5C3.74 1.5 1.5 3.74 1.5 6.5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 2.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm1 5.5h-2v-3h2v3z" fill="currentColor"/>
+      </svg>
+      Regarding: <em>"<%= claim %>"</em>
+    </p>
+
+    <div class="answer-body">
+      <%# Render each sentence on its own so citation tags display clearly %>
+      <%
+        // Split into sentences for readability; keep tags intact
+        const sentences = answer.split(/(?<=[.!?])\s+/);
+      %>
+      <% sentences.forEach(function(sentence) { %>
+        <p class="answer-sentence"><%= sentence.trim() %></p>
+      <% }); %>
+    </div>
+
+    <div class="answer-footer">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;margin-top:2px">
+        <path d="M6 1L7.5 4.5H11L8 6.5L9 10L6 8L3 10L4 6.5L1 4.5H4.5L6 1Z" stroke="currentColor" stroke-width="1" fill="none"/>
+      </svg>
+      Every sentence is tagged to its source article. Unverifiable claims are stated explicitly.
+    </div>
+  <% } %>
+</div>
+
+<style>
+  .answer-claim-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .answer-claim-label em {
+    font-style: italic;
+    color: var(--text);
+  }
+
+  .answer-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .answer-sentence {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* Style [Article N] and [Source, Date] inline citation tags */
+  .answer-sentence :global(.cite) {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 2px;
+    vertical-align: middle;
+  }
+
+  .answer-footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  // Progressively enhance [Article N] / [Source, Date] tags into styled chips
+  (function () {
+    document.querySelectorAll('.answer-sentence').forEach(function (p) {
+      p.innerHTML = p.innerHTML.replace(
+        /\[([^\]]+)\]/g,
+        '<span class="cite">[$1]</span>'
+      );
+    });
+  })();
+</script>

@@ -1,0 +1,42 @@
+[
+	{
+		"claim": "US inflation has been declining in 2025",
+		"expectedVerdict": "Partially True"
+	},
+	{
+		"claim": "The US Federal Reserve cut interest rates in early 2025",
+		"expectedVerdict": "False"
+	},
+	{
+		"claim": "Apple launched a foldable iPhone in 2025",
+		"expectedVerdict": "False"
+	},
+	{
+		"claim": "The FDA approved a new Alzheimer's treatment in 2025",
+		"expectedVerdict": "True"
+	},
+	{
+		"claim": "US unemployment rate is below 4% in 2025",
+		"expectedVerdict": "False"
+	},
+	{
+		"claim": "OpenAI released a new flagship model in 2025",
+		"expectedVerdict": "True"
+	},
+	{
+		"claim": "The US and China signed a new trade agreement in 2025",
+		"expectedVerdict": "False"
+	},
+	{
+		"claim": "India overtook Japan to become the fourth largest economy in 2025",
+		"expectedVerdict": "True"
+	},
+	{
+		"claim": "A major US bank collapsed in early 2025",
+		"expectedVerdict": "True"
+	},
+	{
+		"claim": "The US passed new AI regulation legislation in 2025",
+		"expectedVerdict": "False"
+	}
+]
