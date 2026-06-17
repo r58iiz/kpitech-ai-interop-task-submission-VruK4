@@ -67,7 +67,8 @@ TOC:
 <a name="question-news-api-used"></a>
 > [!NOTE]
 > **News API used**\
-> News API used is [NewsAPI](https://newsapi.org/). [SerpAPI](https://serpapi.com/) does not provide article content.
+> Both [NewsAPI](https://newsapi.org/) and [SerpAPI](https://serpapi.com/) have been implemented.
+> SerpAPI needs [Firecrawl](https://www.firecrawl.dev/) to fetch and convert the website content as it alone does not fetch the content, only the metadata.
 
 <a name="question-relevance-assessment"></a>
 > [!NOTE]
